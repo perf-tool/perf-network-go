@@ -18,6 +18,7 @@
 package perfn
 
 import (
+	"github.com/perf-tool/perf-network-go/metrics"
 	"github.com/perf-tool/perf-network-go/util"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -27,11 +28,14 @@ import (
 )
 
 func Run(config Config) error {
+	metrics.Init()
 	http.Handle("/metrics", promhttp.Handler())
-	err := http.ListenAndServe(":20008", nil)
-	if err != nil {
-		return err
-	}
+	go func() {
+		err := http.ListenAndServe(":20008", nil)
+		if err != nil {
+			panic(err)
+		}
+	}()
 	switch config.ProtocolType {
 	case ProtocolTypeUdp:
 		if config.CommType == CommTypeClient {
@@ -44,6 +48,10 @@ func Run(config Config) error {
 			tcpClientRun(getClientConfig())
 		}
 	case ProtocolTypeHttp:
+		if config.CommType == CommTypeClient {
+			logrus.Info("start http client")
+			httpClientRun(getClientConfig())
+		}
 	}
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
