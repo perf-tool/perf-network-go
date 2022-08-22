@@ -18,6 +18,7 @@
 package perfn
 
 import (
+	"github.com/perf-tool/perf-network-go/metrics"
 	"github.com/perf-tool/perf-network-go/util"
 	"github.com/sirupsen/logrus"
 	"net"
@@ -41,10 +42,16 @@ func udpClientRun(clientConfig ClientConfig) {
 			ticker := time.NewTicker(time.Duration(clientConfig.TickPerConnMs) * time.Millisecond)
 			for range ticker.C {
 				message := util.RandBytes(clientConfig.PacketSize)
+				startTime := time.Now()
 				_, err := conn.Write(message)
 				if err != nil {
+					metrics.UdpClientSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					logrus.Error("write udp message error: ", err)
 					break
+				} else {
+					metrics.UdpClientSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
+					metrics.UdpClientSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
+						float64(time.Since(startTime).Milliseconds()))
 				}
 			}
 		}()

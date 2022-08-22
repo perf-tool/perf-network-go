@@ -19,12 +19,19 @@ package perfn
 
 import (
 	"github.com/perf-tool/perf-network-go/util"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"os/signal"
 )
 
 func Run(config Config) error {
+	http.Handle("/metrics", promhttp.Handler())
+	err := http.ListenAndServe(":20008", nil)
+	if err != nil {
+		return err
+	}
 	switch config.ProtocolType {
 	case ProtocolTypeUdp:
 		if config.CommType == CommTypeClient {
