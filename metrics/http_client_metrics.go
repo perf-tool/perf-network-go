@@ -23,6 +23,16 @@ import (
 )
 
 var (
+	HttpClientRecvBytesCount = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "http_client", "recv_bytes_total"),
+		},
+	)
+	HttpClientSendBytesCount = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "http_client", "send_bytes_total"),
+		},
+	)
 	HttpClientSendSuccessCount = promauto.NewCounter(
 		prometheus.CounterOpts{
 			Name: prometheus.BuildFQName(namespace, "http_client", "send_success_total"),

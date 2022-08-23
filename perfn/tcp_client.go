@@ -43,19 +43,27 @@ func tcpClientRun(clientConfig ClientConfig) {
 			for range ticker.C {
 				message := util.RandBytes(clientConfig.PacketSize)
 				startTime := time.Now()
-				_, err := conn.Write(message)
+				size, err := conn.Write(message)
 				if err != nil {
 					metrics.TcpClientSendFailCount.Inc()
 					metrics.TcpClientConnSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					logrus.Error("write tcp message error: ", err)
 					break
 				} else {
+					metrics.TcpClientSendBytesCount.Add(float64(size))
 					cost := time.Since(startTime).Milliseconds()
 					metrics.TcpClientSendSuccessCount.Inc()
 					metrics.TcpClientSendSuccessLatency.Observe(float64(cost))
 					metrics.TcpClientConnSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					metrics.TcpClientConnSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
 						float64(cost))
+				}
+				buffer := make([]byte, 2*clientConfig.PacketSize)
+				n, err := conn.Read(buffer)
+				if err != nil {
+					logrus.Error("read tcp message error: ", err)
+				} else {
+					metrics.UdpClientRecvBytesCount.Add(float64(n))
 				}
 			}
 		}()

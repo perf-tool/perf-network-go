@@ -43,19 +43,27 @@ func udpClientRun(clientConfig ClientConfig) {
 			for range ticker.C {
 				message := util.RandBytes(clientConfig.PacketSize)
 				startTime := time.Now()
-				_, err := conn.Write(message)
+				size, err := conn.Write(message)
 				if err != nil {
 					metrics.UdpClientSendFailCount.Inc()
 					metrics.UdpClientConnSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					logrus.Error("write udp message error: ", err)
 					break
 				} else {
+					metrics.UdpClientSendBytesCount.Add(float64(size))
 					cost := time.Since(startTime).Milliseconds()
 					metrics.UdpClientSendSuccessCount.Inc()
 					metrics.UdpClientSendSuccessLatency.Observe(float64(cost))
 					metrics.UdpClientConnSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					metrics.UdpClientConnSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
 						float64(cost))
+				}
+				buffer := make([]byte, 2*clientConfig.PacketSize)
+				n, err := conn.Read(buffer)
+				if err != nil {
+					logrus.Error("read udp message error: ", err)
+				} else {
+					metrics.UdpClientRecvBytesCount.Add(float64(n))
 				}
 			}
 		}()

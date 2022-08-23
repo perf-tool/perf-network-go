@@ -23,6 +23,16 @@ import (
 )
 
 var (
+	UdpClientRecvBytesCount = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "udp_client", "recv_bytes_total"),
+		},
+	)
+	UdpClientSendBytesCount = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "udp_client", "send_bytes_total"),
+		},
+	)
 	UdpClientSendSuccessCount = promauto.NewCounter(
 		prometheus.CounterOpts{
 			Name: prometheus.BuildFQName(namespace, "udp_client", "send_success_total"),

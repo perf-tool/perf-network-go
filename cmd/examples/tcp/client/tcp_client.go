@@ -23,8 +23,9 @@ import (
 
 func main() {
 	config := perfn.Config{
-		ProtocolType: perfn.ProtocolTypeTcp,
-		CommType:     perfn.CommTypeClient,
+		ProtocolType:             perfn.ProtocolTypeTcp,
+		CommType:                 perfn.CommTypeClient,
+		PrometheusMetricsDisable: false,
 	}
 	err := perfn.Run(config)
 	if err != nil {
