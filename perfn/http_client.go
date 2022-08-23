@@ -44,6 +44,7 @@ func httpClientRun(clientConfig ClientConfig) {
 					logrus.Error("send http request message error: ", err)
 					break
 				} else {
+					metrics.HttpClientSendBytesCount.Add(float64(len(message)))
 					cost := time.Since(startTime).Milliseconds()
 					metrics.HttpClientSendSuccessCount.Inc()
 					metrics.HttpClientSendSuccessLatency.Observe(float64(cost))
