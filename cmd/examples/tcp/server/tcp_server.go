@@ -19,27 +19,13 @@ package main
 
 import (
 	"github.com/perf-tool/perf-network-go/perfn"
-	"github.com/perf-tool/perf-network-go/util"
-	"os"
 )
 
 func main() {
-	var config perfn.Config
-	envProtocolType := os.Getenv("PROTOCOL_TYPE")
-	if envProtocolType == "udp" {
-		config.ProtocolType = perfn.ProtocolTypeUdp
-	} else if envProtocolType == "tcp" {
-		config.ProtocolType = perfn.ProtocolTypeTcp
-	} else if envProtocolType == "http" {
-		config.ProtocolType = perfn.ProtocolTypeHttp
+	config := perfn.Config{
+		ProtocolType: perfn.ProtocolTypeTcp,
+		CommType:     perfn.CommTypeServer,
 	}
-	envCommType := os.Getenv("COMM_TYPE")
-	if envCommType == "client" {
-		config.CommType = perfn.CommTypeClient
-	} else if envCommType == "server" {
-		config.CommType = perfn.CommTypeServer
-	}
-	config.PrometheusMetricsDisable = util.GetEnvBool("PROMETHEUS_METRICS_DISABLE", false)
 	err := perfn.Run(config)
 	if err != nil {
 		panic(err)

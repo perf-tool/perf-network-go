@@ -31,7 +31,7 @@ import (
 func httpClientRun(clientConfig ClientConfig) {
 	for i := 0; i < clientConfig.ConnNum; i++ {
 		path := util.GetEnvStr("CLIENT_HTTP_PATH", "perf")
-		url := fmt.Sprintf("http://%s:%d/%s", clientConfig.Host, clientConfig.Port, path)
+		url := fmt.Sprintf("http://%s/%s", clientConfig.addr(), path)
 		go func() {
 			ticker := time.NewTicker(time.Duration(clientConfig.TickPerConnMs) * time.Millisecond)
 			for range ticker.C {

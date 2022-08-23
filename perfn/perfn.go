@@ -28,14 +28,17 @@ import (
 )
 
 func Run(config Config) error {
-	metrics.Init()
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		err := http.ListenAndServe(":20008", nil)
-		if err != nil {
-			panic(err)
-		}
-	}()
+	if !config.PrometheusMetricsDisable {
+		metrics.Init()
+		http.Handle("/metrics", promhttp.Handler())
+		go func() {
+			err := http.ListenAndServe(":20008", nil)
+			if err != nil {
+				panic(err)
+			}
+		}()
+	}
+	var err error
 	switch config.ProtocolType {
 	case ProtocolTypeUdp:
 		if config.CommType == CommTypeClient {
@@ -46,12 +49,18 @@ func Run(config Config) error {
 		if config.CommType == CommTypeClient {
 			logrus.Info("start tcp client")
 			tcpClientRun(getClientConfig())
+		} else if config.CommType == CommTypeServer {
+			logrus.Info("start tcp server")
+			err = tcpServerRun(getServerConfig())
 		}
 	case ProtocolTypeHttp:
 		if config.CommType == CommTypeClient {
 			logrus.Info("start http client")
 			httpClientRun(getClientConfig())
 		}
+	}
+	if err != nil {
+		return err
 	}
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -62,10 +71,21 @@ func Run(config Config) error {
 
 func getClientConfig() ClientConfig {
 	return ClientConfig{
-		Host:          util.GetEnvStr("CLIENT_HOST", "localhost"),
-		Port:          util.GetEnvInt("CLIENT_PORT", 5678),
+		CommonConfig: CommonConfig{
+			Host: util.GetEnvStr("CLIENT_HOST", "localhost"),
+			Port: util.GetEnvInt("CLIENT_PORT", 5678),
+		},
 		ConnNum:       util.GetEnvInt("CLIENT_CONN_NUM", 10),
 		TickPerConnMs: util.GetEnvInt("CLIENT_TICK_PER_CONN_MS", 1000),
 		PacketSize:    util.GetEnvInt("CLIENT_PACKET_SIZE", 1024),
+	}
+}
+
+func getServerConfig() ServerConfig {
+	return ServerConfig{
+		CommonConfig: CommonConfig{
+			Host: util.GetEnvStr("SERVER_HOST", "0.0.0.0"),
+			Port: util.GetEnvInt("SERVER_PORT", 5678),
+		},
 	}
 }
