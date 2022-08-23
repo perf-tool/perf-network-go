@@ -39,6 +39,17 @@ func udpClientRun(clientConfig ClientConfig) {
 				return
 			}
 			defer conn.Close()
+			go func() {
+				for {
+					buffer := make([]byte, 2*clientConfig.PacketSize)
+					n, err := conn.Read(buffer)
+					if err != nil {
+						logrus.Error("read udp message error: ", err)
+					} else {
+						metrics.UdpClientRecvBytesCount.Add(float64(n))
+					}
+				}
+			}()
 			ticker := time.NewTicker(time.Duration(clientConfig.TickPerConnMs) * time.Millisecond)
 			for range ticker.C {
 				message := util.RandBytes(clientConfig.PacketSize)
@@ -57,13 +68,6 @@ func udpClientRun(clientConfig ClientConfig) {
 					metrics.UdpClientConnSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					metrics.UdpClientConnSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
 						float64(cost))
-				}
-				buffer := make([]byte, 2*clientConfig.PacketSize)
-				n, err := conn.Read(buffer)
-				if err != nil {
-					logrus.Error("read udp message error: ", err)
-				} else {
-					metrics.UdpClientRecvBytesCount.Add(float64(n))
 				}
 			}
 		}()
