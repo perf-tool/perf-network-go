@@ -15,33 +15,47 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package main
+package perfn
 
 import (
-	"github.com/perf-tool/perf-network-go/perfn"
-	"github.com/perf-tool/perf-network-go/util"
-	"os"
+	"fmt"
+	"github.com/sirupsen/logrus"
+	"net"
 )
 
-func main() {
-	var config perfn.Config
-	envProtocolType := os.Getenv("PROTOCOL_TYPE")
-	if envProtocolType == "udp" {
-		config.ProtocolType = perfn.ProtocolTypeUdp
-	} else if envProtocolType == "tcp" {
-		config.ProtocolType = perfn.ProtocolTypeTcp
-	} else if envProtocolType == "http" {
-		config.ProtocolType = perfn.ProtocolTypeHttp
-	}
-	envCommType := os.Getenv("COMM_TYPE")
-	if envCommType == "client" {
-		config.CommType = perfn.CommTypeClient
-	} else if envCommType == "server" {
-		config.CommType = perfn.CommTypeServer
-	}
-	config.PrometheusMetricsDisable = util.GetEnvBool("PROMETHEUS_METRICS_DISABLE", false)
-	err := perfn.Run(config)
+func tcpServerRun(serverConfig ServerConfig) error {
+	l, err := net.Listen("tcp", serverConfig.addr())
 	if err != nil {
-		panic(err)
+		return err
+	}
+	defer l.Close()
+	logrus.Info("listen on ", serverConfig.addr())
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			logrus.Error("Error accepting ", err)
+			break
+		}
+		go handleRequest(conn)
+	}
+	return nil
+}
+
+func handleRequest(conn net.Conn) {
+	for {
+		buf := make([]byte, 1024)
+		reqLen, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println("Error reading:", err.Error())
+		}
+		write, err := conn.Write(buf[:reqLen])
+		if reqLen != write {
+			logrus.Error("write not full success")
+			break
+		}
+		if err != nil {
+			logrus.Error("write data failed")
+			break
+		}
 	}
 }

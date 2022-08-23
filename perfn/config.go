@@ -35,18 +35,31 @@ const (
 )
 
 type Config struct {
-	ProtocolType ProtocolType
-	CommType     CommType
+	ProtocolType             ProtocolType
+	CommType                 CommType
+	PrometheusMetricsDisable bool
+}
+
+type CommonConfig struct {
+	Host string
+	Port int
 }
 
 type ClientConfig struct {
-	Host          string
-	Port          int
+	CommonConfig  CommonConfig
 	ConnNum       int
 	TickPerConnMs int
 	PacketSize    int
 }
 
 func (c *ClientConfig) addr() string {
-	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+	return fmt.Sprintf("%s:%d", c.CommonConfig.Host, c.CommonConfig.Port)
+}
+
+type ServerConfig struct {
+	CommonConfig CommonConfig
+}
+
+func (s *ServerConfig) addr() string {
+	return fmt.Sprintf("%s:%d", s.CommonConfig.Host, s.CommonConfig.Port)
 }
