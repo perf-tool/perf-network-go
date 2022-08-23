@@ -45,13 +45,17 @@ func tcpClientRun(clientConfig ClientConfig) {
 				startTime := time.Now()
 				_, err := conn.Write(message)
 				if err != nil {
-					metrics.TcpClientSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
+					metrics.TcpClientSendFailCount.Inc()
+					metrics.TcpClientConnSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					logrus.Error("write tcp message error: ", err)
 					break
 				} else {
-					metrics.TcpClientSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
-					metrics.TcpClientSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
-						float64(time.Since(startTime).Milliseconds()))
+					cost := time.Since(startTime).Milliseconds()
+					metrics.TcpClientSendSuccessCount.Inc()
+					metrics.TcpClientSendSuccessLatency.Observe(float64(cost))
+					metrics.TcpClientConnSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
+					metrics.TcpClientConnSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
+						float64(cost))
 				}
 			}
 		}()

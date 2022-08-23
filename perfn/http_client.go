@@ -39,13 +39,17 @@ func httpClientRun(clientConfig ClientConfig) {
 				startTime := time.Now()
 				resp, err := http.Post(url, "application/x-www-form-urlencoded", bytes.NewBuffer(message))
 				if err != nil {
-					metrics.HttpClientSendFailCount.WithLabelValues(clientConfig.addr()).Inc()
+					metrics.HttpClientSendFailCount.Inc()
+					metrics.HttpClientConnSendFailCount.WithLabelValues(clientConfig.addr()).Inc()
 					logrus.Error("send http request message error: ", err)
 					break
 				} else {
-					metrics.HttpClientSendSuccessCount.WithLabelValues(clientConfig.addr()).Inc()
-					metrics.HttpClientSendSuccessLatency.WithLabelValues(clientConfig.addr()).Observe(
-						float64(time.Since(startTime).Milliseconds()))
+					cost := time.Since(startTime).Milliseconds()
+					metrics.HttpClientSendSuccessCount.Inc()
+					metrics.HttpClientSendSuccessLatency.Observe(float64(cost))
+					metrics.HttpClientConnSendSuccessCount.WithLabelValues(clientConfig.addr()).Inc()
+					metrics.HttpClientConnSendSuccessLatency.WithLabelValues(clientConfig.addr()).Observe(
+						float64(cost))
 					_, err := io.ReadAll(resp.Body)
 					if err != nil {
 						logrus.Error("read http body error: ", err)

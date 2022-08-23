@@ -45,13 +45,17 @@ func udpClientRun(clientConfig ClientConfig) {
 				startTime := time.Now()
 				_, err := conn.Write(message)
 				if err != nil {
-					metrics.UdpClientSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
+					metrics.UdpClientSendFailCount.Inc()
+					metrics.UdpClientConnSendFailCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
 					logrus.Error("write udp message error: ", err)
 					break
 				} else {
-					metrics.UdpClientSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
-					metrics.UdpClientSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
-						float64(time.Since(startTime).Milliseconds()))
+					cost := time.Since(startTime).Milliseconds()
+					metrics.UdpClientSendSuccessCount.Inc()
+					metrics.UdpClientSendSuccessLatency.Observe(float64(cost))
+					metrics.UdpClientConnSendSuccessCount.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Inc()
+					metrics.UdpClientConnSendSuccessLatency.WithLabelValues(conn.LocalAddr().String(), conn.RemoteAddr().String()).Observe(
+						float64(cost))
 				}
 			}
 		}()

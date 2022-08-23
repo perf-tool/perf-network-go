@@ -23,19 +23,35 @@ import (
 )
 
 var (
-	HttpClientSendSuccessCount = promauto.NewCounterVec(
+	HttpClientSendSuccessCount = promauto.NewCounter(
 		prometheus.CounterOpts{
-			Name: prometheus.BuildFQName(namespace, "http_client", "send_success_total")},
-		[]string{"client_addr"},
+			Name: prometheus.BuildFQName(namespace, "http_client", "send_success_total"),
+		},
 	)
-	HttpClientSendFailCount = promauto.NewCounterVec(
+	HttpClientSendFailCount = promauto.NewCounter(
 		prometheus.CounterOpts{
-			Name: prometheus.BuildFQName(namespace, "http_client", "send_fail_total")},
-		[]string{"client_addr"},
+			Name: prometheus.BuildFQName(namespace, "http_client", "send_fail_total"),
+		},
 	)
-	HttpClientSendSuccessLatency = promauto.NewSummaryVec(
+	HttpClientSendSuccessLatency = promauto.NewSummary(
 		prometheus.SummaryOpts{
 			Name:       prometheus.BuildFQName(namespace, "http_client", "send_latency_ms"),
+			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+		},
+	)
+	HttpClientConnSendSuccessCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "http_client_conn", "send_success_total")},
+		[]string{"client_addr"},
+	)
+	HttpClientConnSendFailCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "http_client_conn", "send_fail_total")},
+		[]string{"client_addr"},
+	)
+	HttpClientConnSendSuccessLatency = promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name:       prometheus.BuildFQName(namespace, "http_client_conn", "send_latency_ms"),
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}},
 		[]string{"client_addr"},
 	)
