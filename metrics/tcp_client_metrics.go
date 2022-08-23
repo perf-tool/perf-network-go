@@ -23,19 +23,35 @@ import (
 )
 
 var (
-	TcpClientSendSuccessCount = promauto.NewCounterVec(
+	TcpClientSendSuccessCount = promauto.NewCounter(
 		prometheus.CounterOpts{
-			Name: prometheus.BuildFQName(namespace, "tcp_client", "send_success_total")},
-		[]string{"client_addr", "server_addr"},
+			Name: prometheus.BuildFQName(namespace, "tcp_client", "send_success_total"),
+		},
 	)
-	TcpClientSendFailCount = promauto.NewCounterVec(
+	TcpClientSendFailCount = promauto.NewCounter(
 		prometheus.CounterOpts{
-			Name: prometheus.BuildFQName(namespace, "tcp_client", "send_fail_total")},
-		[]string{"client_addr", "server_addr"},
+			Name: prometheus.BuildFQName(namespace, "tcp_client", "send_fail_total"),
+		},
 	)
-	TcpClientSendSuccessLatency = promauto.NewSummaryVec(
+	TcpClientSendSuccessLatency = promauto.NewSummary(
 		prometheus.SummaryOpts{
 			Name:       prometheus.BuildFQName(namespace, "tcp_client", "send_latency_ms"),
+			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+		},
+	)
+	TcpClientConnSendSuccessCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "tcp_client_conn", "send_success_total")},
+		[]string{"client_addr", "server_addr"},
+	)
+	TcpClientConnSendFailCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "tcp_client_conn", "send_fail_total")},
+		[]string{"client_addr", "server_addr"},
+	)
+	TcpClientConnSendSuccessLatency = promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name:       prometheus.BuildFQName(namespace, "tcp_client_conn", "send_latency_ms"),
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}},
 		[]string{"client_addr", "server_addr"},
 	)
